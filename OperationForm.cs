@@ -10,6 +10,9 @@ using System.Collections;
 
 namespace NightBuilder
 {
+    /// <summary>
+    /// Форма создания/редактирования операции.
+    /// </summary>
     public partial class OperationForm : Form
     {
         public Operation operation;
@@ -19,6 +22,11 @@ namespace NightBuilder
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Получить номер в выпадающем списке для типа операции
+        /// </summary>
+        /// <param name="type"> тип операции </param>
+        /// <returns> номер </returns>
         private int GetOperationTypeIndex(Operation.OperationTypes type)
         {
             for (int i = 0; i < typeComboBox.Items.Count; i++ )
@@ -32,6 +40,11 @@ namespace NightBuilder
             return 0;
         }
 
+        /// <summary>
+        /// Получить номер в выпадающем списке для типа реагирования на ошибку.
+        /// </summary>
+        /// <param name="type"> тип реагирования на ошибку </param>
+        /// <returns> номер </returns>
         private int GetErrorTypeIndex(Operation.ErrorTypes error)
         {
             for (int i = 0; i < errorComboBox.Items.Count; i++)
@@ -45,6 +58,11 @@ namespace NightBuilder
             return 0;
         }
 
+        /// <summary>
+        /// Обработать событие загрузки формы.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OperationForm_Load(object sender, EventArgs e)
         {
             typeComboBox.Items.AddRange(Operation.GetOperationTypes().ToArray());
@@ -99,11 +117,22 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для типа операции.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void typeComboBox_Validated(object sender, EventArgs e)
         {
             CheckComboBox(sender, typeComboBox, "Select operation type");
         }
         
+        /// <summary>
+        /// Задать правильное отображение об ошибке ввода данных для выпадающего списка.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="comboBox"> выпадающий список </param>
+        /// <param name="errorMsg"> сообщение об ошибке </param>
         private void CheckComboBox(object sender, ComboBox comboBox, string errorMsg)
         {
             if ((sender as ComboBox).SelectedIndex == -1)
@@ -115,6 +144,13 @@ namespace NightBuilder
                 errorProvider.SetError(errorComboBox, string.Empty);
             }
         }
+
+        /// <summary>
+        /// Задать правильное отображение об ошибке ввода данных для текстового поля.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="textBox"> текстовое поле </param>
+        /// <param name="errorMsg"> сообщение об ошибке </param>
         private void CheckTextBox(object sender, TextBox textBox, string errorMsg)
         {
             if ((sender as TextBox).Text.Equals(""))
@@ -126,36 +162,72 @@ namespace NightBuilder
                 errorProvider.SetError(textBox, string.Empty);
             }
         }
+
+        /// <summary>
+        /// Обработать корректность выбранных данных для источника операции.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void sourceNameTextBox_Validated(object sender, EventArgs e)
         {
             CheckTextBox(sender, sourceNameTextBox, "Set source");
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для цели операции.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void destinationTextBox_Validated(object sender, EventArgs e)
         {
             CheckTextBox(sender, destinationTextBox, "Set destination");
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для типа реагирования на ошибку.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void errorComboBox_Validated(object sender, EventArgs e)
         {
             CheckComboBox(sender, errorComboBox, "Select error type");
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для адреса SQL-сервера.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void sqlServerTextBox_Validated(object sender, EventArgs e)
         {
             CheckTextBox(sender, sqlServerTextBox, "Set SQL Server");
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для логина к БД.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dbLoginTextBox_Validated(object sender, EventArgs e)
         {
             CheckTextBox(sender, dbLoginTextBox, "Set DB login");
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для пароля к БД.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dbPasswordTextBox_Validated(object sender, EventArgs e)
         {
             CheckTextBox(sender, dbPasswordTextBox, "Set DB password");
         }
 
+        /// <summary>
+        /// Обработать корректность выбранных данных для родительской операции.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void parentComboBox_Validated(object sender, EventArgs e)
         {
             if (parentComboBox.SelectedIndex <= 0)
@@ -173,6 +245,11 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать событие закрытия формы.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OperationForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (this.DialogResult == DialogResult.OK)
@@ -202,9 +279,9 @@ namespace NightBuilder
                     str = str.Substring(0, str.IndexOf(' '));
                     parentIndex = int.Parse(str) - 1;
                 }
-                if (sourceName.Equals("") || type == Operation.OperationTypes.EMPTY || error == Operation.ErrorTypes.EMPTY)
+                if ((sourceName.Equals("") && destinationName.Equals("")) || type == Operation.OperationTypes.EMPTY || error == Operation.ErrorTypes.EMPTY)
                 {
-                    MessageBox.Show("Set missing data");
+                    MessageBox.Show("Set missing data", "Data error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     e.Cancel = true;
                 }
                 if (operation == null)
@@ -214,6 +291,11 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать событие выбора типа операции.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void typeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Operation.OperationTypes type = ((EnumWrapper<Operation.OperationTypes>)typeComboBox.SelectedItem).GetConst();
@@ -347,6 +429,7 @@ namespace NightBuilder
                     destinationLabel.Text = "Where generate?";
                     sourceNameLabel.Enabled = false;
                     sourceNameTextBox.Enabled = false;
+                    selectDestinationButton.Enabled = true;
                     //selectSourceButton.Enabled = true;
                     //destinationLabel.Enabled = false;
                     //destinationTextBox.Enabled = false;
@@ -354,6 +437,11 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать событие выбора родительской операции.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void parentComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Operation.OperationTypes type = ((EnumWrapper<Operation.OperationTypes>)typeComboBox.SelectedItem).GetConst();
@@ -380,6 +468,12 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Открыть диалог выбора файла или папки.
+        /// </summary>
+        /// <param name="textBox"> текстовое поле </param>
+        /// <param name="isFile"> признак, что нужен файловый диалог </param>
+        /// <param name="filter"> фильтр выбора </param>
         private void OpenFileOrFolderDialog(TextBox textBox, bool isFile, string filter = "")
         {
             if (isFile)
@@ -409,6 +503,11 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать событие выбора источника операции через диалог.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void selectSourceButton_Click(object sender, EventArgs e)
         {
             bool isFile = true;
@@ -429,6 +528,11 @@ namespace NightBuilder
             OpenFileOrFolderDialog(sourceNameTextBox, isFile, filter);
         }
 
+        /// <summary>
+        /// Обработать событие выбора цели операции через диалог.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void selectDestinationButton_Click(object sender, EventArgs e)
         {
             OpenFileOrFolderDialog(destinationTextBox, false);

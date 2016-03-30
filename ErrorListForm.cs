@@ -10,6 +10,9 @@ using System.Windows.Forms;
 
 namespace NightBuilder
 {
+    /// <summary>
+    /// Форма, отображающая список ошибок.
+    /// </summary>
     public partial class ErrorListForm : Form
     {
         public ErrorListForm()
@@ -17,6 +20,10 @@ namespace NightBuilder
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Заполнить список ошибок на форме.
+        /// </summary>
+        /// <param name="errors"></param>
         public void SetErrorList(ArrayList errors)
         {
             foreach (string error in errors)

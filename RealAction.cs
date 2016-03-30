@@ -23,12 +23,16 @@ namespace NightBuilder
         /// </summary>
         private bool isEnd = false;
         /// <summary>
-        /// Сообщение об ошибке.
+        /// Сообщение об одиночной ошибке.
         /// </summary>
         private string error = "";
-
+        /// <summary>
+        /// Список ошибок.
+        /// </summary>
         private ArrayList errorList;
-
+        /// <summary>
+        /// Признак успешности выполнения действия.
+        /// </summary>
         public bool IsEnd
         {
             get
@@ -36,6 +40,9 @@ namespace NightBuilder
                 return isEnd;
             }
         }
+        /// <summary>
+        /// Сообщение об одиночной ошибке.
+        /// </summary>
         public string Error
         {
             get
@@ -43,7 +50,9 @@ namespace NightBuilder
                 return error;
             }
         }
-
+        /// <summary>
+        /// Список ошибок.
+        /// </summary>
         public ArrayList ErrorList
         {
             get
@@ -68,11 +77,11 @@ namespace NightBuilder
     public static class RealAction
     {     
         /// <summary>
-        /// Сделать резервную копию файла.
+        /// Создать резервную копию файла.
         /// </summary>
         /// <param name="fileName"> полный путь к файлу, который копируется </param>
         /// <param name="backupFolder"> полный путь к папке для резервной копии </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult BackupFile(string fileName, string backupFolder)
         {
             try
@@ -94,7 +103,7 @@ namespace NightBuilder
         /// </summary>
         /// <param name="fileName"> полный путь к файлу, который копируется </param>
         /// <param name="destinationFolder"> полный путь к папке, куда копируется </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult CopyFile(string fileName, string destinationFolder)
         {
             try
@@ -113,19 +122,17 @@ namespace NightBuilder
         }
 
         /// <summary>
-        /// Сделать резервную копию папки.
+        /// Создать резервную копию папки.
         /// </summary>
         /// <param name="folderName"> полный путь к папке, которая копируется </param>
         /// <param name="backupFolder"> полный путь к папке, куда копировать </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult BackupFolder(string folderName, string backupFolder, Operation.ErrorTypes errorType)
         {
             if (!Directory.Exists(folderName))
             {
                 return new ActionResult(false, "Folder '" + folderName + "' not found.");
             }
-            //DirectoryInfo dirInfo = new DirectoryInfo(folderName);
-            //string folder = Path.Combine(backupFolder, dirInfo.Name);
             try
             {
                 if (!Directory.Exists(backupFolder))
@@ -145,14 +152,9 @@ namespace NightBuilder
         /// </summary>
         /// <param name="folderName"> полный путь к папке, которая копируется </param>
         /// <param name="destinationFolder"> полный путь к папке, куда копировать </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult CopyFolder(string folderName, string destinationFolder, Operation.ErrorTypes errorType)
         {
-            //if (!Directory.Exists(destinationFolder))
-            //{
-            //    return new ActionResult(false, "Folder '" + destinationFolder + "' not found.");
-            //}
-
             bool isSuccessful = false;
             string msg = "";
             ArrayList errorList = new ArrayList();
@@ -186,11 +188,6 @@ namespace NightBuilder
                 }
                 foreach (DirectoryInfo dir in mainDir.GetDirectories())
                 {
-                    //string subDir = Path.Combine(folder, dir.Name);
-                    //if (!Directory.Exists(subDir))
-                    //{
-                    //    Directory.CreateDirectory(subDir);
-                    //}
                     ActionResult result = CopyFolder(dir.FullName, folder, errorType);
                     if (!result.IsEnd)
                     {
@@ -217,7 +214,7 @@ namespace NightBuilder
         /// Проверить подключение к БД.
         /// </summary>
         /// <param name="sqlConnect"> строка подключения </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult ConnectToDB(string sqlConnect)
         {
             string msg = "";
@@ -242,7 +239,7 @@ namespace NightBuilder
         /// <param name="dbName"> название БД </param>
         /// <param name="backupFolderName"> папка, где будет размещена резервная копия </param>
         /// <param name="sqlConnect"> строка подключения к БД </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult BackupDB(string dbName, string backupFolderName, string sqlConnect)
         {
             string msg = "";
@@ -276,7 +273,7 @@ namespace NightBuilder
         /// Запустить SQL-скрипт.
         /// </summary>
         /// <param name="queryFile"> файл SQL-скрипта </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult RunSQLQuery(string queryFile, string sqlConnect)
         {
             string msg = "";
@@ -297,11 +294,11 @@ namespace NightBuilder
         }
 
         /// <summary>
-        /// Запустить папку, где располагаются SQL-скрипты
+        /// Запустить все SQL-скрипты в папке.
         /// </summary>
         /// <param name="sqlFolder"> папка с SQL-скриптами </param>
         /// <param name="sqlConnect"> строка подключения к БД </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult RunSQLQueryInFolder(string sqlFolder, string sqlConnect, Operation.ErrorTypes errorType)
         {
             string msg = "";
@@ -352,7 +349,7 @@ namespace NightBuilder
         /// </summary>
         /// <param name="serviceName"> краткое название службы </param>
         /// <param name="isStart"> запустить, если true, остановить, если false </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult ChangeServiceState(string serviceName, bool isStart)
         {
             string msg = "";
@@ -381,7 +378,7 @@ namespace NightBuilder
         /// Включить службу.
         /// </summary>
         /// <param name="serviceName"> название службы </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult RunService(string serviceName)
         {
             return ChangeServiceState(serviceName, true);
@@ -391,7 +388,7 @@ namespace NightBuilder
         /// Выключить службу.
         /// </summary>
         /// <param name="serviceName"> название службы </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult StopService(string serviceName)
         {
             return ChangeServiceState(serviceName, false);
@@ -402,7 +399,7 @@ namespace NightBuilder
         /// </summary>
         /// <param name="taskName"> название задачи </param>
         /// <param name="isStart"> запустить, если true, остановить, если false </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult ChangeTaskState(string taskName, bool isStart)
         {
             string msg = "";
@@ -435,7 +432,7 @@ namespace NightBuilder
         /// Запустить задачу в Планировщике заданий
         /// </summary>
         /// <param name="taskName"> название задачи </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult RunTask(string taskName)
         {
             return ChangeTaskState(taskName, true);
@@ -445,7 +442,7 @@ namespace NightBuilder
         /// Остановить задачу в Планировщике заданий
         /// </summary>
         /// <param name="taskName"> название задачи </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult StopTask(string taskName)
         {
             return ChangeTaskState(taskName, false);
@@ -455,7 +452,7 @@ namespace NightBuilder
         /// Запусть процесс.
         /// </summary>
         /// <param name="processName"> название процесса </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult RunProccess(string processName)
         {
             string msg = "";
@@ -477,7 +474,7 @@ namespace NightBuilder
         /// Остановить процесс.
         /// </summary>
         /// <param name="processName"> название процесса </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult StopProcess(string processName)
         {
             string msg = "";
@@ -506,7 +503,7 @@ namespace NightBuilder
         /// Удалить файл.
         /// </summary>
         /// <param name="fileName"> полный путь и название файла </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult DeleteFile(string fileName)
         {
             string msg = "";
@@ -532,7 +529,7 @@ namespace NightBuilder
         /// Удалить папку.
         /// </summary>
         /// <param name="folderName"> полный путь к папке </param>
-        /// <returns></returns>
+        /// <returns> результат выполнения </returns>
         public static ActionResult DeleteFolder(string folderName, Operation.ErrorTypes errorType)
         {
             string msg = "";
@@ -582,6 +579,11 @@ namespace NightBuilder
             return new ActionResult(isSuccessful, msg, errorList);
         }
 
+        /// <summary>
+        /// Добавить результат выполнения действия в список ошибок.
+        /// </summary>
+        /// <param name="errorList"> список ошибок </param>
+        /// <param name="result"> добавляемый результат действия </param>
         private static void AddResultToErrorList(ArrayList errorList, ActionResult result)
         {
             if (result.ErrorList == null)
@@ -594,18 +596,18 @@ namespace NightBuilder
             }
         }
 
-        public static ActionResult GenerateFolder(string folderName, string backupFolder)
+        /// <summary>
+        /// Генерировать папку.
+        /// </summary>
+        /// <param name="backupFolder"> путь к папке </param>
+        /// <returns> результат выполнения </returns>
+        public static ActionResult GenerateFolder(string backupFolder)
         {
-            if (!Directory.Exists(folderName))
-            {
-                return new ActionResult(false, "Folder '" + folderName + "' not found.");
-            }
-            string folder = Path.Combine(folderName, backupFolder);
             try
             {
-                if (!Directory.Exists(folder))
+                if (!Directory.Exists(backupFolder))
                 {
-                    Directory.CreateDirectory(folder);
+                    Directory.CreateDirectory(backupFolder);
                 }
             }
             catch (Exception e)

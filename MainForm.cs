@@ -14,26 +14,46 @@ using System.Xml.Serialization;
 
 namespace NightBuilder
 {
+    /// <summary>
+    /// Основная форма утилиты.
+    /// </summary>
     public partial class MainForm : Form
     {
+        /// <summary>
+        /// Список операций сценария.
+        /// </summary>
         private ArrayList operations = new ArrayList();
+        /// <summary>
+        /// Поток (нить), в котором будут выполняться операции.
+        /// </summary>
         private Thread thread;
+        /// <summary>
+        /// Признак сохранения сценария в файл.
+        /// </summary>
         private bool isSavedInFile = false;
+        /// <summary>
+        /// Длина заголовка главной формы.
+        /// </summary>
         private int titleLength = 0;
+        /// <summary>
+        /// Полный путь к файлу, в котором хранится сценарий.
+        /// </summary>
         private string savedFile = "";
+        /// <summary>
+        /// Буферная операция, которую держим в памяти при копировании.
+        /// </summary>
         private Operation copyOperation = null;
 
         public MainForm()
         {
             InitializeComponent();
-            //DataTable dt = System.Data.Sql.SqlDataSourceEnumerator.Instance.GetDataSources();
-            //foreach (DataRow r in dt.Rows)
-            //{
-            //    string serverName = r["ServerName"].ToString();
-            //    string instanceName = r["InstanceName"].ToString();
-            //}
         }
 
+        /// <summary>
+        /// Обработать двойной клик мыши по ячейке таблицы.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             EditOperation(e.RowIndex, true);
@@ -92,6 +112,10 @@ namespace NightBuilder
             isSavedInFile = false;
         }
 
+        /// <summary>
+        /// Заполнить строку таблицы на основе операции.
+        /// </summary>
+        /// <param name="index"> номер операции в списке </param>
         private void SetDataGridViewRow(int index)
         {
             dataGridView.Rows[index].Cells["Status"].Value = Properties.Resources.Clear_16;
@@ -110,6 +134,11 @@ namespace NightBuilder
             dataGridView.CurrentCell = dataGridView[0, index];
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Новая операция".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void newButton_Click(object sender, EventArgs e)
         {
             int index = -1;
@@ -120,6 +149,11 @@ namespace NightBuilder
             EditOperation(index, false);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Редактировать операцию".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void editButton_Click(object sender, EventArgs e)
         {
             if (dataGridView.CurrentRow == null)
@@ -138,6 +172,8 @@ namespace NightBuilder
         /// </summary>
         private void ExecuteOperations(int startStep)
         {
+            bool isError = false;
+            bool isStop = false;
             Dictionary<string, string> variables = new Dictionary<string, string>();
             foreach (Operation oper in operations)
             {
@@ -146,7 +182,8 @@ namespace NightBuilder
                     variables.Add(oper.sourceName.ToUpper(), oper.destinationName);
                 }
             }
-            for (int i = startStep; i < operations.Count; i++)
+            int i = startStep;
+            for (; i < operations.Count; i++)
             {
                 ActionResult result = ((Operation)operations[i]).Execute(variables);
                 if (!result.IsEnd)
@@ -160,6 +197,7 @@ namespace NightBuilder
                     }
                     if (((Operation)operations[i]).IsStopOnError())
                     {
+                        isError = true;
                         break;
                     }
                 }
@@ -170,11 +208,13 @@ namespace NightBuilder
                     dataGridView.Rows[i].Tag = null;
                     if (((Operation)operations[i]).type == Operation.OperationTypes.STOP_SCENARIO)
                     {
+                        isStop = true;
                         break;
                     }
                 }
                 Thread.Sleep(0);
             }
+            // Анонимный делегат при окончании работы потока.
             this.BeginInvoke(
                new Action(() =>
                {
@@ -188,6 +228,18 @@ namespace NightBuilder
                    deleteButton.Enabled = true;
                    upButton.Enabled = true;
                    downButton.Enabled = true;
+                   if (isStop)
+                   {
+                       if (i + 1 < dataGridView.RowCount)
+                       {
+                           i++;
+                       }
+                   }
+                   else if (!isError)
+                   {
+                       i--;
+                   }
+                   dataGridView.CurrentCell = dataGridView[0, i];
                }));
             
         }
@@ -204,6 +256,10 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Начать выполнение списка операций с требуемого шага.
+        /// </summary>
+        /// <param name="startStep"> номер начального шага </param>
         private void StartOperations(int startStep)
         {
             this.Cursor = Cursors.WaitCursor;
@@ -221,16 +277,31 @@ namespace NightBuilder
             thread.Start();
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Начать выполнение сценария".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void startButton_Click(object sender, EventArgs e)
         {
             StartOperations(0);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Начать выполнение сценария с шага".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void startFromButton_Click(object sender, EventArgs e)
         {
             StartOperations(dataGridView.CurrentRow.Index);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Остановить выполнение сценария".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void stopButton_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.Default;
@@ -246,6 +317,10 @@ namespace NightBuilder
             downButton.Enabled = true;
         }
 
+        /// <summary>
+        /// Задать заголовок главной формы.
+        /// </summary>
+        /// <param name="fileName"></param>
         private void setMainFormHeader(string fileName)
         {
             isSavedInFile = true;
@@ -261,7 +336,11 @@ namespace NightBuilder
             }
         }
 
-        private void saveScenarioToFile(bool isNewFile)
+        /// <summary>
+        /// Сохранить сценарий в файл.
+        /// </summary>
+        /// <param name="isNewFile"> признак, что нужно создать новый файл </param>
+        private void SaveScenarioToFile(bool isNewFile)
         {
             string fileName = savedFile;
             if (isNewFile)
@@ -284,11 +363,21 @@ namespace NightBuilder
             setMainFormHeader(fileName);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Сохранить сценарий".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void saveButton_Click(object sender, EventArgs e)
         {
-            saveScenarioToFile(savedFile.Length == 0);
+            SaveScenarioToFile(savedFile.Length == 0);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Загрузить сценарий".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void loadButton_Click(object sender, EventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
@@ -339,7 +428,7 @@ namespace NightBuilder
         }
 
         /// <summary>
-        /// Является ли строка родительской операцией.
+        /// Проверить, является ли строка родительской операцией.
         /// </summary>
         /// <param name="index"> индекс операции в списке </param>
         /// <returns>Да/нет</returns>
@@ -403,16 +492,31 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Переместить операцию вверх".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void upButton_Click(object sender, EventArgs e)
         {
             MoveRowInDataGridView(true);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Переместить операцию вниз".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void downButton_Click(object sender, EventArgs e)
         {
             MoveRowInDataGridView(false);
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Очистить список операций".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void clearButton_Click(object sender, EventArgs e)
         {
             dataGridView.Rows.Clear();
@@ -420,6 +524,11 @@ namespace NightBuilder
             isSavedInFile = false;
         }
 
+        /// <summary>
+        /// Обработать клик по кнопке "Удалить выбранную операцию".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void deleteButton_Click(object sender, EventArgs e)
         {
             if (dataGridView.CurrentRow == null)
@@ -429,21 +538,31 @@ namespace NightBuilder
             int index = dataGridView.CurrentRow.Index;
             dataGridView.Rows.RemoveAt(index);
             operations.RemoveAt(index);
-            int i = 0;
-            foreach (Operation oper in operations)
+            for (int i = 0; i < operations.Count; i++)
             {
                 dataGridView.Rows[i].Cells["Number"].Value = i + 1;
-                if (oper.parentIndex == index)
+                int parentIndex = ((Operation)operations[i]).parentIndex;
+                if (parentIndex == index)
                 {
-                    oper.parentIndex = -1;
-                    oper.SetParent(null);
+                    ((Operation)operations[i]).parentIndex = -1;
+                    ((Operation)operations[i]).SetParent(null);
                     dataGridView.Rows[i].Cells["ParentStep"].Value = "";
                 }
-                i++;
+                if (parentIndex != -1 && parentIndex > index)
+                {
+                    parentIndex = ((Operation)operations[i]).parentIndex--;
+                    ((Operation)operations[i]).SetParent((Operation)operations[parentIndex]);
+                    dataGridView.Rows[i].Cells["ParentStep"].Value = parentIndex;
+                }
             }
             isSavedInFile = false;
         }
 
+        /// <summary>
+        /// Установить активность кнопок старта и сохранения в зависимость от состояния таблицы операций.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void EnableStartSaveButtons()
         {
             if (dataGridView.Rows.Count > 0)
@@ -462,33 +581,53 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать событие добавления строки в таблице.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             EnableStartSaveButtons();
         }
 
+        /// <summary>
+        /// Обработать событие удаления строки в таблице.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
             EnableStartSaveButtons();
         }
 
+        /// <summary>
+        /// Обработать событие закрытия главной формы.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (!(!isSavedInFile && dataGridView.Rows.Count > 0))
             {
                 return;
             }
-            DialogResult result = MessageBox.Show("Do want to save your scenario?", "Save scenario", MessageBoxButtons.YesNoCancel);
+            DialogResult result = MessageBox.Show("Do want to save your scenario?", "Save scenario", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
             if (result == DialogResult.Cancel)
             {
                 e.Cancel = true;
             }
             else if (result == DialogResult.Yes)
             {
-                saveScenarioToFile(savedFile.Length == 0);
+                SaveScenarioToFile(savedFile.Length == 0);
             }
         }
 
+        /// <summary>
+        /// Обработать событие клика мышью по ячейке таблицы.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex != 6)
@@ -505,6 +644,11 @@ namespace NightBuilder
             form.ShowDialog();
         }
 
+        /// <summary>
+        /// Обработать событие нажатия клавиш клавиатуры.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Shift && e.KeyCode == Keys.F5 && startFromButton.Enabled)
@@ -524,7 +668,7 @@ namespace NightBuilder
             }
             if (e.Shift && e.Control && e.KeyCode == Keys.S && saveButton.Enabled)
             {
-                saveScenarioToFile(true);
+                SaveScenarioToFile(true);
             }
             else
             {
@@ -575,6 +719,11 @@ namespace NightBuilder
             }
         }
 
+        /// <summary>
+        /// Обработать событие нажатия кнопки "Копировать операцию".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void copyButton_Click(object sender, EventArgs e)
         {
             if (dataGridView.CurrentRow == null){
@@ -583,6 +732,11 @@ namespace NightBuilder
             copyOperation = (Operation)operations[dataGridView.CurrentRow.Index];
         }
 
+        /// <summary>
+        /// Обработать событие нажатия кнопки "Вставить операцию".
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void pasteButton_Click(object sender, EventArgs e)
         {
             if (dataGridView.CurrentRow == null)
@@ -590,9 +744,19 @@ namespace NightBuilder
                 return;
             }
             int index = dataGridView.CurrentRow.Index + 1;
-            operations.Insert(index, copyOperation);
+            operations.Insert(index, new Operation(copyOperation));
+            for (int i = 0; i < operations.Count; i++)
+            {
+                int parentIndex = ((Operation)operations[i]).parentIndex;
+                if (parentIndex != -1 && parentIndex >= index)
+                {
+                    parentIndex = ((Operation)operations[i]).parentIndex++;
+                    ((Operation)operations[i]).SetParent((Operation)operations[parentIndex]);
+                }
+            }
             dataGridView.Rows.Insert(index, 1);
-            SetDataGridViewRow(index);
+            FillDataGridView();
+            dataGridView.CurrentCell = dataGridView[0, index];
 
             ClearStatusImages(0);
             isSavedInFile = false;

@@ -7,14 +7,6 @@ using System.Xml;
 
 namespace NightBuilder
 {
-    //public static class KVExt
-    //{
-    //    public static string ToString22(this int vvv)
-    //    {
-    //        return "sdfgdfgsdgdf";
-    //    }
-    //}
-
     /// <summary>
     /// Обёртка для пары <Тип перечисления, строка>
     /// </summary>
@@ -42,31 +34,73 @@ namespace NightBuilder
     [Serializable]
     public class Operation
     {
+        /// <summary>
+        /// Тип операции
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public OperationTypes type = OperationTypes.EMPTY;
+        /// <summary>
+        /// Источник ресурса для операции (файл, задачи и пр.)
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public string sourceName = "";
+        /// <summary>
+        /// Цель операции (например, куда копировать)
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public string destinationName = "";
+        /// <summary>
+        /// Тип обработки ошибки, возникшей во время операции
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public ErrorTypes errorType = ErrorTypes.EMPTY;
+        /// <summary>
+        /// Признак, что операцию нужно выполнить с админскими правами (зарезервированный признак)
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public bool isAdmin = true;
+        /// <summary>
+        /// Адрес SQL-сервера
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public string sqlServer = "";
+        /// <summary>
+        /// Логин для SQL-сервера
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public string dbLogin = "";
+        /// <summary>
+        /// Пароль для SQL-сервера
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public string dbPassword = "";
-        [System.Xml.Serialization.XmlElementAttribute()]
-        public string operationName = "";
+        /// <summary>
+        /// Логин для SQL-сервера
+        /// </summary>
+        //[System.Xml.Serialization.XmlElementAttribute()]
+        //public string operationName = "";
+        /// <summary>
+        /// Номер родительской задачи
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public int parentIndex = -1;
+        /// <summary>
+        /// Признак, что нужно генерировать папку для резервной копии
+        /// </summary>
         [System.Xml.Serialization.XmlElementAttribute()]
         public bool isGenerateBackupFolder = false;
 
+        /// <summary>
+        /// Папка для резервной копии
+        /// </summary>
         private string backupFolder = "";
+        /// <summary>
+        /// Родительская операция
+        /// </summary>
         private Operation parentOperation;
+        /// <summary>
+        /// Смещение для кодирования пароля
+        /// </summary>
         const char CODE_DELTA = 'A';
 
         public Operation() { }
@@ -106,6 +140,11 @@ namespace NightBuilder
             this.isGenerateBackupFolder = operation.isGenerateBackupFolder;
         }
 
+        /// <summary>
+        /// Кодировать пароль.
+        /// </summary>
+        /// <param name="password"> пароль </param>
+        /// <returns> закодированный пароль </returns>
         private static string CodePassword(string password)
         {
             char[] charArray = password.ToCharArray();
@@ -117,6 +156,11 @@ namespace NightBuilder
             return new string(charArray);
         }
 
+        /// <summary>
+        /// Декодировать пароль.
+        /// </summary>
+        /// <param name="password"> пароль </param>
+        /// <returns> декодированный пароль </returns>
         private static string DecodePassword(string password)
         {
             char[] charArray = password.ToCharArray();
@@ -154,16 +198,16 @@ namespace NightBuilder
         /// Сгенерировать название папки.
         /// </summary>
         /// <param name="forder"> папка для резервной копии </param>
-        /// <returns></returns>
+        /// <returns> сгенерированная папка </returns>
         private static string GenerateFolder(string forder)
         {
             return forder + String.Format("\\{0:yyyy-MM-dd-hh-mm-ss}", DateTime.Now);
         }
 
         /// <summary>
-        /// Задать родительский узел.
+        /// Задать текущей операции родительскую операцию.
         /// </summary>
-        /// <param name="operation"></param>
+        /// <param name="operation"> родительская операция </param>
         public void SetParent(Operation operation)
         {
             this.parentOperation = operation;
@@ -233,7 +277,7 @@ namespace NightBuilder
         /// <summary>
         /// Выдать список типов операций.
         /// </summary>
-        /// <returns></returns>
+        /// <returns> список типов операций </returns>
         public static ArrayList GetOperationTypes()
         {
             ArrayList arr = new ArrayList();
@@ -250,7 +294,7 @@ namespace NightBuilder
         /// <summary>
         /// Выдать список типов реагирования на ошибки.
         /// </summary>
-        /// <returns></returns>
+        /// <returns> список типов реагирования на ошибки </returns>
         public static ArrayList GetErrorTypes()
         {
             ArrayList arr = new ArrayList();
@@ -264,16 +308,30 @@ namespace NightBuilder
             return arr;
         }
 
+        /// <summary>
+        /// Перевести в строку тип реагирования на ошибку.
+        /// </summary>
+        /// <param name="type"> тип реагирования на ошибку </param>
+        /// <returns> строковое представление </returns>
         public static string ToString(ErrorTypes type)
         {
             return errTypes[type.GetHashCode()];
         }
 
+        /// <summary>
+        /// Перевести в строку тип операции.
+        /// </summary>
+        /// <param name="type"> тип операции </param>
+        /// <returns> строковое представление </returns>
         public static string ToString(OperationTypes type)
         {
             return operTypes[type.GetHashCode()];
         }
 
+        /// <summary>
+        /// Перевести в строку операцию.
+        /// </summary>
+        /// <returns> строковое представление </returns>
         public override string ToString()
         {
             switch (type)
@@ -305,27 +363,9 @@ namespace NightBuilder
         }
 
         /// <summary>
-        /// Выдать числовое значение константы из перечисления типов операций.
-        /// </summary>
-        /// <returns></returns>
-        //public int GetOperationTypeIndex()
-        //{
-        //    return type.GetHashCode();
-        //}
-
-        /// <summary>
-        /// Выдать числовое значение константы из перечисления типов реагирования на ошибки.
-        /// </summary>
-        /// <returns></returns>
-        //public int GetErrorTypeIndex()
-        //{
-        //    return errorType.GetHashCode();
-        //}
-
-        /// <summary>
         /// Выдать признак остановки при ошибке.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Да/нет</returns>
         public bool IsStopOnError()
         {
             return errorType == ErrorTypes.STOP_ON_ERROR ? true : false;
@@ -334,7 +374,7 @@ namespace NightBuilder
         /// <summary>
         /// Выдать строку подключения к БД.
         /// </summary>
-        /// <returns></returns>
+        /// <returns> строка подключения </returns>
         private string GetConnectionString()
         {
             if (parentOperation == null)
@@ -344,6 +384,12 @@ namespace NightBuilder
             return parentOperation.GetConnectionString();
         }
 
+        /// <summary>
+        /// Заменить имя переменной на её значение.
+        /// </summary>
+        /// <param name="str"> входная строка </param>
+        /// <param name="variables"> словарь переменных </param>
+        /// <returns> строка с заменёнными переменными </returns>
         private string ReplaceVariables(string str, Dictionary<string, string> variables)
         {
             int firstIndex = str.IndexOf('%', 0);
@@ -363,7 +409,7 @@ namespace NightBuilder
         /// <summary>
         /// Выполнить операцию.
         /// </summary>
-        /// <returns></returns>
+        /// <returns> результат выполнения с детализацией в случае ошибки </returns>
         public ActionResult Execute(Dictionary<string, string> variables)
         {
             string sourceNameCopy = ReplaceVariables(sourceName, variables);
@@ -408,7 +454,7 @@ namespace NightBuilder
                 case OperationTypes.DELETE_FOLDER:
                     return RealAction.DeleteFolder(sourceNameCopy, errorType);
                 case OperationTypes.GEN_FOLDER:
-                    return RealAction.GenerateFolder(sourceNameCopy, backupFolderCopy);
+                    return RealAction.GenerateFolder(backupFolderCopy);
                 case OperationTypes.STOP_SCENARIO:
                 case OperationTypes.CREATE_VAR:
                     return new ActionResult(true, "");
